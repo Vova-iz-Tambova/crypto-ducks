@@ -1,13 +1,17 @@
 // ProtectedRoute.js
 
 import React from 'react';
-import { Navigate } from "react-router-dom";
+import { Route, Redirect } from "react-router-dom";
+import { AppContext } from './AppContext.js'; // импортируем контекст
 
-// этот компонент принимает другой компонент в качестве пропса
-// он также может взять неограниченное число пропсов и передать их новому компоненту
-const ProtectedRouteElement = ({ element: Component, ...props  }) => {
+const ProtectedRoute = ({ component: Component, ...props }) => {
+  const value = React.useContext(AppContext); // получаем значения из контекста
   return (
-    props.loggedIn ? <Component {...props} /> : <Navigate to="/login" replace/>
+    <Route>
+      {
+        () => value.state.loggedIn === true ? <Component {...props} userData={value.state.userData} /> : <Redirect to="./login" />
+      }
+    </Route>
 )}
 
-export default ProtectedRouteElement;
+export default ProtectedRoute;

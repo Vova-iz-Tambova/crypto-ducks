@@ -1,65 +1,86 @@
 // Login.js
 
-import React, {useState} from 'react';
-import {Link} from 'react-router-dom';
-import * as duckAuth from '../auth.js';
+import React from 'react';
+import { Link, withRouter } from 'react-router-dom';
+import Logo from './Logo.js';
+import * as duckAuth from '../duckAuth.js';
+import { AppContext } from './AppContext.js'; // импортируем контекст
 import './styles/Login.css';
 
-const Login = () => {
-  const [formValue, setFormValue] = useState({
-    username: '',
-    password: ''
-  })
+class Login extends React.Component {
+  static contextType = AppContext; // подключаем контекст
+  constructor(props){
+    super(props);
+    this.state = {
+      username: '',
+      password: '',
+      message: ''
+    }
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
 
-  const handleChange = (e) => {
+  }
+  handleChange(e) {
     const {name, value} = e.target;
-
-    setFormValue({
-      ...formValue,
+    this.setState({
       [name]: value
     });
   }
-
-  const handleSubmit = (e) => {
+  handleSubmit(e){
+    const value = this.context; // получаем значения из контекста
     e.preventDefault();
-    if (!formValue.username || !formValue.password){
+    if (!this.state.username || !this.state.password){
       return;
     }
-    auth.authorize(formValue.username, formValue.password)
-      .then((data) => {
-        if (data.jwt){
-          setFormValue({username: '', password: ''});
-                    props.handleLogin();
-          navigate('/ducks', {replace: true});
-        }
-      })
-      .catch(err => console.log(err));
-  } 
+    duckAuth.authorize(this.state.username, this.state.password)
+    .then((data) => {
+      if (!data){
+        return this.setState({
+          message: 'Что-то пошло не так!'
+        });
+      }
+      if (data.jwt){
+        this.setState({email: '', password: '', message: ''} ,() => {
+          value.handleLogin(); // подключаем метод из value
+          this.props.history.push('/ducks');
+          return;
+        })
+      }
+    })
+    .catch(err => console.log(err));
+  }
+  render(){
+    return(
+      <div onSubmit={this.handleSubmit} className="login">
+        <Logo title={'CryptoDucks'}/>
+        <p className="login__welcome">
+          Это приложение содержит конфиденциальную информацию.
+          Пожалуйста, войдите или зарегистрируйтесь, чтобы получить доступ к CryptoDucks.
+        </p>
+        <p className="login__error">
+          {this.state.message}
+        </p>
+        <form className="login__form">
+          <label for="username">
+            Логин:
+          </label>
+          <input id="username" required name="username" type="text" value={this.state.username} onChange={this.handleChange} />
+          <label htmlFor="password">
+            Пароль:
+          </label>
+          <input id="password" required name="password" type="password" value={this.state.password} onChange={this.handleChange} />
+          <div className="login__button-container">
+            <button type="submit" className="login__link">Войти</button>
+          </div>
+        </form>
 
-  return (
-    <div className="login">
-      <p className="login__welcome">
-        Добро пожаловать!
-      </p>
-      <form onSubmit={handleSubmit} className="login__form">
-        <label htmlFor="username">
-          Логин:
-        </label>
-        <input required id="username" name="username" type="text" value={formValue.username} onChange={handleChange} />
-        <label htmlFor="password">
-          Пароль:
-        </label>
-        <input required id="password" name="password" type="password" value={formValue.password} onChange={handleChange} />
-        <div className="login__button-container">
-          <button type="submit" className="login__link">Войти</button>
+        <div className="login__signup">
+          <p>Еще не зарегистрированы?</p>
+          <Link to="/register" className="signup__link">Зарегистрироваться</Link>
         </div>
-      </form>
-      <div className="login__signup">
-        <p>Ещё не зарегистрированы?</p>
-        <Link to="/register" className="signup__link">Зарегистрироваться</Link>
       </div>
-    </div>
-  )
+    )
+  }
 }
 
-export default Login;
+export default withRouter(Login);
