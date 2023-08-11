@@ -17,6 +17,16 @@ class App extends React.Component {
     };
   }
 
+  componentDidMount() {
+    // позже здесь тоже нужно будет проверить токен пользователя!
+  };
+  handleLogin = () => {
+      e.preventDefault();
+    this.setState({
+      loggedIn: true
+    })
+  }
+
   render() {
     return (
       <Routes>
